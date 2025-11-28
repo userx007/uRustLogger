@@ -37,7 +37,7 @@ fn main() {
     log_print!(
         LogLevel::Verbose,
         log_hex8!(0xABu8),
-        log_hex16!(0x1234u16),
+        log_hex16!(4444u16),
         log_hex32!(0xDEADBEEFu32),
         log_hex64!(0xCAFEBABEDEADC0DEu64)
     );
@@ -65,7 +65,12 @@ fn main() {
     );
 
     // --- Char logging ---
-    log_print!(LogLevel::Info, log_str!("Char:"), log_char!('X'), log_char!('✔'));
+    log_print!(
+        LogLevel::Info,
+        log_str!("Char:"),
+        log_char!('X'),
+        log_char!('✔')
+    );
 
     // --- Error example ---
     log_print!(
@@ -80,10 +85,7 @@ fn main() {
         log_f64!(3.1415926535)
     );
 
-    log_print!(
-        LogLevel::Fixed,
-        log_str!("Ending application...")
-    );
+    log_print!(LogLevel::Fixed, log_str!("Ending application..."));
 
     // --- Show file location ---
     {
@@ -92,8 +94,6 @@ fn main() {
             println!("Log file written to: {}", path);
         }
     }
-
-
 
     // Shut down logging
     log_deinit!();
