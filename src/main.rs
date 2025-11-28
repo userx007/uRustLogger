@@ -19,7 +19,7 @@ fn main() {
 
     // --- Basic string, integer, bool ---
     log_print!(
-        LogLevel::Info,
+        LogLevel::Fixed,
         log_str!("Starting application"),
         log_i32!(123),
         log_bool!(true)
@@ -47,6 +47,7 @@ fn main() {
         LogLevel::Info,
         log_str!("Pi approximation:"),
         log_f32!(3.1415),
+        log_str!("..and e approximation:"),
         log_f64!(2.718281828)
     );
 
@@ -64,13 +65,24 @@ fn main() {
     );
 
     // --- Char logging ---
-    log_print!(LogLevel::Info, log_char!('X'), log_char!('✔'));
+    log_print!(LogLevel::Info, log_str!("Char:"), log_char!('X'), log_char!('✔'));
 
     // --- Error example ---
     log_print!(
         LogLevel::Error,
         log_str!("This is an error caused by the value"),
         log_f64!(3.1415926535)
+    );
+
+    log_print!(
+        LogLevel::Fatal,
+        log_str!("and this is a fatal one.."),
+        log_f64!(3.1415926535)
+    );
+
+    log_print!(
+        LogLevel::Fixed,
+        log_str!("Ending application...")
     );
 
     // --- Show file location ---
@@ -80,6 +92,8 @@ fn main() {
             println!("Log file written to: {}", path);
         }
     }
+
+
 
     // Shut down logging
     log_deinit!();

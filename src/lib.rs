@@ -40,7 +40,7 @@ impl LogLevel {
             LogLevel::Info => "\x1b[32m",
             LogLevel::Warning => "\x1b[33m",
             LogLevel::Error => "\x1b[31m",
-            LogLevel::Fatal => "\x1b[91m",
+            LogLevel::Fatal => "\x1b[35m",
             LogLevel::Fixed => "\x1b[97m",
         }
     }
