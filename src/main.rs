@@ -18,7 +18,7 @@ fn main() {
     );
 
     // --- Basic string, integer, bool ---
-    log_print_multi!(
+    log_print!(
         LogLevel::Info,
         log_str!("Starting application"),
         log_i32!(123),
@@ -27,14 +27,14 @@ fn main() {
 
     // --- Pointer logging ---
     let value = 999;
-    log_print_multi!(
+    log_print!(
         LogLevel::Debug,
         log_str!("Value address:"),
         log_ptr!(&value)
     );
 
     // --- Hex logging ---
-    log_print_multi!(
+    log_print!(
         LogLevel::Verbose,
         log_hex8!(0xABu8),
         log_hex16!(0x1234u16),
@@ -43,7 +43,7 @@ fn main() {
     );
 
     // --- Floating point ---
-    log_print_multi!(
+    log_print!(
         LogLevel::Info,
         log_str!("Pi approximation:"),
         log_f32!(3.1415),
@@ -51,7 +51,7 @@ fn main() {
     );
 
     // --- All integer types ---
-    log_print_multi!(
+    log_print!(
         LogLevel::Debug,
         log_i8!(-8),
         log_i16!(-16),
@@ -64,10 +64,10 @@ fn main() {
     );
 
     // --- Char logging ---
-    log_print_multi!(LogLevel::Info, log_char!('X'), log_char!('✔'));
+    log_print!(LogLevel::Info, log_char!('X'), log_char!('✔'));
 
     // --- Error example ---
-    log_print_multi!(
+    log_print!(
         LogLevel::Error,
         log_str!("This is an error caused by the value"),
         log_f64!(3.1415926535)

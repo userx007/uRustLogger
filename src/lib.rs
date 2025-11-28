@@ -330,7 +330,7 @@ macro_rules! log_char {
 
 // ---------- Main print macro ----------
 #[macro_export]
-macro_rules! log_print_multi {
+macro_rules! log_print {
     ($level:expr, $($val:expr),+ $(,)?) => {{
         let mut logger = $crate::LOGGER.lock().unwrap();
         logger.set_level($level);
@@ -385,7 +385,7 @@ mod tests {
     #[test]
     fn test_basic_logging() {
         reset_logger();
-        log_print_multi!(
+        log_print!(
             LogLevel::Info,
             log_str!("Hello"),
             log_i32!(42),
@@ -398,7 +398,7 @@ mod tests {
     #[test]
     fn test_hex_logging() {
         reset_logger();
-        log_print_multi!(
+        log_print!(
             LogLevel::Debug,
             log_hex8!(0xABu8),
             log_hex16!(0x1234u16),
@@ -413,7 +413,7 @@ mod tests {
     fn test_pointer_logging() {
         reset_logger();
         let x = 123u32;
-        log_print_multi!(LogLevel::Info, log_ptr!(&x));
+        log_print!(LogLevel::Info, log_ptr!(&x));
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
@@ -425,7 +425,7 @@ mod tests {
             let mut logger = LOGGER.lock().unwrap();
             logger.enable_file_logging();
         }
-        log_print_multi!(
+        log_print!(
             LogLevel::Info,
             log_str!("File logging test"),
             log_i32!(2025)
@@ -446,8 +446,8 @@ mod tests {
             logger.set_console_threshold(LogLevel::Error);
             logger.set_file_threshold(LogLevel::Warning);
         }
-        log_print_multi!(LogLevel::Info, log_str!("This should not print"));
-        log_print_multi!(LogLevel::Error, log_str!("This should print"));
+        log_print!(LogLevel::Info, log_str!("This should not print"));
+        log_print!(LogLevel::Error, log_str!("This should print"));
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
@@ -456,7 +456,7 @@ mod tests {
     fn test_logging_all_types() {
         reset_logger();
         let x = 123;
-        log_print_multi!(
+        log_print!(
             LogLevel::Info,
             log_str!("Hello"),
             log_i8!(1),
@@ -485,7 +485,7 @@ mod tests {
             logger.use_icons_in_file = true;
             logger.enable_file_logging();
         }
-        log_print_multi!(LogLevel::Warning, log_str!("Warning with icon"));
+        log_print!(LogLevel::Warning, log_str!("Warning with icon"));
         let logger = LOGGER.lock().unwrap();
         assert!(logger.file_logging_enabled);
         if let Some(path) = &logger.log_file_path {
