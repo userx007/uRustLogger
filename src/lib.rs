@@ -135,7 +135,7 @@ impl Logger {
                 } else {
                     &self.current_level.to_string()
                 };
-                let file_message = format!("{} {}| {}\n", timestamp, level_repr, self.buffer);
+                let file_message = format!("{}{} | {}\n", timestamp, level_repr, self.buffer);
                 let _ = file.write_all(file_message.as_bytes());
             }
         }

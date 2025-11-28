@@ -141,6 +141,11 @@ fn main() {
     println!("Logger test complete.");
 }
 ```
-## Output screenshot
+## Screenshot console output
+![Console output](./docs/ScreenshotConsole.jpg)
 
-![Output](./docs/ScreenshotOutput.jpg)
+## Screenshot file output (with icons)
+![Console output](./docs/ScreenshotFileIcons.jpg)
+
+## Screenshot file output (plain text)
+![Console output](./docs/ScreenshotFilePlainText.jpg)
