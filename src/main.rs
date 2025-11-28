@@ -52,9 +52,10 @@ fn main() {
     );
 
     // --- All integer types ---
+    let i8val = -9;
     log_print!(
         LogLevel::Debug,
-        log_i8!(-8),
+        log_i8!(i8val),
         log_i16!(-16),
         log_i32!(-32),
         log_i64!(-64),

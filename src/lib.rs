@@ -182,186 +182,181 @@ lazy_static::lazy_static! {
     pub static ref LOGGER: Arc<Mutex<Logger>> = Arc::new(Mutex::new(Logger::new()));
 }
 
-// ---------- Type-safe Macros ----------
+// ---------- Type-safe Logger Macros ----------
+
 #[macro_export]
 macro_rules! log_str {
     ($v:expr) => {
         |logger: &mut $crate::Logger| {
-            logger.append($v);
-        }
-    };
-}
-#[macro_export]
-macro_rules! log_bool {
-    ($v:expr) => {
-        |logger: &mut $crate::Logger| {
-            logger.append_bool($v);
-        }
-    };
-}
-#[macro_export]
-macro_rules! log_ptr {
-    ($v:expr) => {
-        |logger: &mut $crate::Logger| {
-            logger.append(format!("{:p}", $v));
-        }
-    };
-}
-#[macro_export]
-macro_rules! log_char {
-    ($v:expr) => {
-        |logger: &mut $crate::Logger| {
+            let _: &str = $v; // ensure type
             logger.append($v);
         }
     };
 }
 
-// Hexadecimal types
+#[macro_export]
+macro_rules! log_bool {
+    ($v:expr) => {
+        |logger: &mut $crate::Logger| {
+            let _: bool = $v;
+            logger.append_bool($v);
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! log_ptr {
+    ($v:expr) => {
+        |logger: &mut $crate::Logger| {
+            // Any reference is acceptable
+            logger.append(format!("{:p}", $v));
+        }
+    };
+}
+
+// Hex macros for integers
 #[macro_export]
 macro_rules! log_hex8 {
-    ($v:expr) => {{
-        fn _f(_: u8) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u8 = $v;
             logger.append_hex($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_hex16 {
-    ($v:expr) => {{
-        fn _f(_: u16) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u16 = $v;
             logger.append_hex($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_hex32 {
-    ($v:expr) => {{
-        fn _f(_: u32) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u32 = $v;
             logger.append_hex($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_hex64 {
-    ($v:expr) => {{
-        fn _f(_: u64) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u64 = $v;
             logger.append_hex($v);
         }
-    }};
+    };
 }
 
 // Signed integers
 #[macro_export]
 macro_rules! log_i8 {
-    ($v:expr) => {{
-        fn _f(_: i8) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: i8 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_i16 {
-    ($v:expr) => {{
-        fn _f(_: i16) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: i16 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_i32 {
-    ($v:expr) => {{
-        fn _f(_: i32) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: i32 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_i64 {
-    ($v:expr) => {{
-        fn _f(_: i64) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: i64 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 
 // Unsigned integers
 #[macro_export]
 macro_rules! log_u8 {
-    ($v:expr) => {{
-        fn _f(_: u8) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u8 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_u16 {
-    ($v:expr) => {{
-        fn _f(_: u16) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u16 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_u32 {
-    ($v:expr) => {{
-        fn _f(_: u32) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u32 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_u64 {
-    ($v:expr) => {{
-        fn _f(_: u64) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: u64 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 
-// Floating point
+// Floating-point types
 #[macro_export]
 macro_rules! log_f32 {
-    ($v:expr) => {{
-        fn _f(_: f32) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: f32 = $v;
             logger.append($v);
         }
-    }};
+    };
 }
 #[macro_export]
 macro_rules! log_f64 {
-    ($v:expr) => {{
-        fn _f(_: f64) {}
-        _f($v);
+    ($v:expr) => {
         |logger: &mut $crate::Logger| {
+            let _: f64 = $v;
             logger.append($v);
         }
-    }};
+    };
+}
+
+// Char
+#[macro_export]
+macro_rules! log_char {
+    ($v:expr) => {
+        |logger: &mut $crate::Logger| {
+            let _: char = $v;
+            logger.append($v);
+        }
+    };
 }
 
 // ---------- Main print macro ----------
