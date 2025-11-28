@@ -8,11 +8,12 @@ fn main() {
     // enable colors = true
     // include date = true
     log_init!(
-        LogLevel::Verbose,
-        LogLevel::Verbose,
-        true,   // enable file logging
-        true,   // enable colors
-        true    // include date
+        LogLevel::Verbose, // console threshold
+        LogLevel::Verbose, // file treshold
+        true,              // enable file logging
+        true,              // enable colors
+        true,              // include date
+        true               // use icons in file
     );
 
     // Test: simple logging
@@ -44,6 +45,13 @@ fn main() {
     log_print_multi!(
         LogLevel::Info,
         log_str!("Pi approximation:"),
+        log_double!(3.1415926535)
+    );
+
+    // Test: floating point
+    log_print_multi!(
+        LogLevel::Error,
+        log_str!("This is an error caused by the value"),
         log_double!(3.1415926535)
     );
 

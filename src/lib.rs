@@ -17,21 +17,6 @@ pub enum LogLevel {
     Fixed,
 }
 
-impl std::fmt::Display for LogLevel {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let s = match self {
-            LogLevel::Verbose => "VERBOSE",
-            LogLevel::Debug => "  DEBUG",
-            LogLevel::Info => "   INFO",
-            LogLevel::Warning => "WARNING",
-            LogLevel::Error => "  ERROR",
-            LogLevel::Fatal => "  FATAL",
-            LogLevel::Fixed => "  FIXED",
-        };
-        write!(f, "{}", s)
-    }
-}
-
 impl LogLevel {
     fn color(&self) -> &'static str {
         match self {
@@ -42,6 +27,30 @@ impl LogLevel {
             LogLevel::Error => "\x1b[31m",   // Red
             LogLevel::Fatal => "\x1b[91m",   // Bright Red
             LogLevel::Fixed => "\x1b[97m",   // Bright White
+        }
+    }
+
+    fn file_icon(&self) -> &'static str {
+        match self {
+            LogLevel::Verbose => "📄",
+            LogLevel::Debug => "🐞",
+            LogLevel::Info => "ℹ️",
+            LogLevel::Warning => "⚠️",
+            LogLevel::Error => "❌",
+            LogLevel::Fatal => "💀",
+            LogLevel::Fixed => "✔️",
+        }
+    }
+
+    fn as_padded_text(&self) -> &'static str {
+        match self {
+            LogLevel::Verbose => "VERBOSE",
+            LogLevel::Debug => "  DEBUG",
+            LogLevel::Info => "   INFO",
+            LogLevel::Warning => "WARNING",
+            LogLevel::Error => "  ERROR",
+            LogLevel::Fatal => "  FATAL",
+            LogLevel::Fixed => "  FIXED",
         }
     }
 }
@@ -55,8 +64,9 @@ pub struct Logger {
     pub file_logging_enabled: bool,
     pub use_colors: bool,
     pub include_date: bool,
+    pub use_file_icons: bool,
     log_file: Option<std::fs::File>,
-    pub log_file_path: Option<String>, // pub so tests can inspect
+    pub log_file_path: Option<String>,
 }
 
 impl Logger {
@@ -69,6 +79,7 @@ impl Logger {
             file_logging_enabled: false,
             use_colors: true,
             include_date: true,
+            use_file_icons: true,
             log_file: None,
             log_file_path: None,
         }
@@ -94,32 +105,45 @@ impl Logger {
     fn timestamp(&self) -> String {
         let now = Local::now();
         if self.include_date {
-            format!("{} | ", now.format("%Y-%m-%d %H:%M:%S%.6f"))
+            format!("{} |", now.format("%Y-%m-%d %H:%M:%S%.6f"))
         } else {
-            format!("{} | ", now.format("%H:%M:%S%.6f"))
+            format!("{} |", now.format("%H:%M:%S%.6f"))
         }
     }
 
     pub fn print(&mut self) {
+        // --- clone necessary data before mutable borrow ---
         let timestamp = self.timestamp();
-        let full_message = format!("{}{} | {}\n", timestamp, self.current_level, self.buffer);
+        let buffer_copy = self.buffer.clone();
+        let current_level = self.current_level;
+        let use_colors = self.use_colors;
+        let use_file_icons = self.use_file_icons;
 
-        if self.current_level >= self.console_threshold {
-            if self.use_colors {
-                print!(
-                    "{}{}{}\x1b[0m",
-                    self.current_level.color(),
-                    full_message,
-                    ""
-                );
+        // --- console output ---
+        if current_level >= self.console_threshold {
+            let full_message = format!(
+                "{}{} | {}\n",
+                timestamp,
+                current_level.as_padded_text(),
+                buffer_copy
+            );
+            if use_colors {
+                print!("{}{}{}\x1b[0m", current_level.color(), full_message, "");
             } else {
                 print!("{}", full_message);
             }
         }
 
+        // --- file output ---
         if self.file_logging_enabled {
             if let Some(file) = &mut self.log_file {
-                let _ = file.write_all(full_message.as_bytes());
+                let level_repr = if use_file_icons {
+                    format!("  {}  ", current_level.file_icon())
+                } else {
+                    format!("{} ", current_level.as_padded_text())
+                };
+                let file_message = format!("{} {}| {}\n", timestamp, level_repr, buffer_copy);
+                let _ = file.write_all(file_message.as_bytes());
             }
         }
 
@@ -165,9 +189,6 @@ lazy_static::lazy_static! {
 }
 
 // ---------- Macros ----------
-//
-// The type-specific macros expand to closures of type `FnOnce(&mut Logger)`.
-// That way log_print_multi! can accept them as expressions and call them after locking.
 #[macro_export]
 macro_rules! log_str {
     ($v:expr) => {
@@ -249,29 +270,25 @@ macro_rules! log_ptr {
     };
 }
 
-// log_print_multi accepts one-or-more expressions (closures produced by the above macros)
 #[macro_export]
 macro_rules! log_print_multi {
     ($level:expr, $($val:expr),+ $(,)?) => {{
         let mut logger = $crate::LOGGER.lock().unwrap();
         logger.set_level($level);
-        $(
-            // each $val is a closure like |logger: &mut Logger| { ... }
-            $val(&mut logger);
-        )+
+        $( $val(&mut logger); )+
         logger.print();
     }};
 }
 
-// init/deinit macros (lock once)
 #[macro_export]
 macro_rules! log_init {
-    ($console:expr, $file:expr, $enable_file:expr, $enable_colors:expr, $include_date:expr) => {{
+    ($console:expr, $file:expr, $enable_file:expr, $enable_colors:expr, $include_date:expr, $use_icons:expr) => {{
         let mut logger = $crate::LOGGER.lock().unwrap();
         logger.set_console_threshold($console);
         logger.set_file_threshold($file);
         logger.use_colors = $enable_colors;
         logger.include_date = $include_date;
+        logger.use_file_icons = $use_icons;
         if $enable_file {
             logger.enable_file_logging();
         } else {
@@ -302,6 +319,7 @@ mod tests {
         logger.file_threshold = LogLevel::Verbose;
         logger.use_colors = false;
         logger.include_date = false;
+        logger.use_file_icons = false;
     }
 
     #[test]
@@ -311,7 +329,7 @@ mod tests {
             LogLevel::Info,
             log_str!("Hello"),
             log_int!(42),
-            log_bool!(true),
+            log_bool!(true)
         );
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
@@ -325,7 +343,7 @@ mod tests {
             log_hex8!(0xABu8),
             log_hex16!(0x1234u16),
             log_hex32!(0xDEADBEEFu32),
-            log_hex64!(0xDEADBEEFFEEDC0DEu64),
+            log_hex64!(0xDEADBEEFFEEDC0DEu64)
         );
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
@@ -379,4 +397,3 @@ mod tests {
         assert!(logger.buffer.is_empty());
     }
 }
-
