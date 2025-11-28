@@ -2,29 +2,30 @@ use logger::*;
 
 fn main() {
     // Initialize the logger:
-    // console threshold = Info
+    // console threshold = Verbose
     // file threshold = Verbose
     // enable file logging = true
     // enable colors = true
     // include date = true
+    // use icons in file = true
     log_init!(
         LogLevel::Verbose, // console threshold
-        LogLevel::Verbose, // file treshold
+        LogLevel::Verbose, // file threshold
         true,              // enable file logging
         true,              // enable colors
         true,              // include date
         true               // use icons in file
     );
 
-    // Test: simple logging
+    // --- Basic string, integer, bool ---
     log_print_multi!(
         LogLevel::Info,
         log_str!("Starting application"),
-        log_int!(123),
+        log_i32!(123),
         log_bool!(true)
     );
 
-    // Test: pointer logging
+    // --- Pointer logging ---
     let value = 999;
     log_print_multi!(
         LogLevel::Debug,
@@ -32,7 +33,7 @@ fn main() {
         log_ptr!(&value)
     );
 
-    // Test: hex logging
+    // --- Hex logging ---
     log_print_multi!(
         LogLevel::Verbose,
         log_hex8!(0xABu8),
@@ -41,21 +42,38 @@ fn main() {
         log_hex64!(0xCAFEBABEDEADC0DEu64)
     );
 
-    // Test: floating point
+    // --- Floating point ---
     log_print_multi!(
         LogLevel::Info,
         log_str!("Pi approximation:"),
-        log_double!(3.1415926535)
+        log_f32!(3.1415),
+        log_f64!(2.718281828)
     );
 
-    // Test: floating point
+    // --- All integer types ---
+    log_print_multi!(
+        LogLevel::Debug,
+        log_i8!(-8),
+        log_i16!(-16),
+        log_i32!(-32),
+        log_i64!(-64),
+        log_u8!(8),
+        log_u16!(16),
+        log_u32!(32),
+        log_u64!(64)
+    );
+
+    // --- Char logging ---
+    log_print_multi!(LogLevel::Info, log_char!('X'), log_char!('✔'));
+
+    // --- Error example ---
     log_print_multi!(
         LogLevel::Error,
         log_str!("This is an error caused by the value"),
-        log_double!(3.1415926535)
+        log_f64!(3.1415926535)
     );
 
-    // Show file location
+    // --- Show file location ---
     {
         let logger = LOGGER.lock().unwrap();
         if let Some(path) = &logger.log_file_path {
