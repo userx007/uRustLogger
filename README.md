@@ -1,6 +1,6 @@
 # uRustLogger
 
-`uRustLogger` is a lightweight, flexible, and fully-featured logging library for Rust, designed for both console and file output. It supports multiple log levels, colored console output, file logging with optional icons, and a rich set of macros for all common data types. The library is ideal for applications that need structured logging with minimal setup.
+`uRustLogger` is a lightweight, flexible, and fully-featured logging library for Rust, designed for both console and file output. It supports multiple log levels, colored console output, file logging with optional icons, per-module tagging, and a rich set of macros for all common data types. The library is ideal for applications that need structured logging with minimal setup.
 
 ## Features
 
@@ -13,13 +13,18 @@
 - **File logging**:
   Logs can be written to a timestamped file. Optionally, each log level can include Unicode emoji icons instead of plain text.
 
+- **Module support**:
+  Each log message can include a module tag to indicate the source of the log. Use the macro `log_module!("MODULE_NAME");` at the top of your Rust file to set the module name for all subsequent logs from that file.  
+  **Note:** Module names are limited to 8 characters to ensure proper alignment in log output.
+
 - **Configurable formatting**:
   - Include/exclude timestamps
   - Enable/disable console colors
   - Use icons or plain text in log files
+  - Include module tags in log output
 
 - **Rich macro-based API**:
-  - `log_print_multi!` – log multiple values at once
+  - `log_print!` – log multiple values at once
   - Type-specific macros for all Rust primitive types:
     - Strings: `log_str!`
     - Integers: `log_i8!`, `log_i16!`, `log_i32!`, `log_i64!`
@@ -35,12 +40,20 @@
 - **Initialization macros**:
   `log_init!` to configure the logger and `log_deinit!` to safely shut it down.
 
+- **Per-file module tagging**:
+  Use `log_module!("MODULE_NAME");` to assign a module name for all log statements in a file. This module name will appear in both console and file output next to the log level, making it easier to trace the origin of messages.  
+  **Note:** Only the first 8 characters of the module name are used for alignment.
+
 ## Quick Setup
 
 ```rust
 use logger::*;
 
+#[allow(clippy::approx_constant)]
 fn main() {
+    
+    log_module!("TEST");
+
     // Initialize the logger:
     // console threshold = Verbose
     // file threshold = Verbose
@@ -54,7 +67,7 @@ fn main() {
         true,              // enable file logging
         true,              // enable colors
         true,              // include date
-        true               // use icons in file
+        false              // use icons in file
     );
 
     // --- Basic string, integer, bool ---
@@ -77,7 +90,7 @@ fn main() {
     log_print!(
         LogLevel::Verbose,
         log_hex8!(0xABu8),
-        log_hex16!(0x1234u16),
+        log_hex16!(4444u16),
         log_hex32!(0xDEADBEEFu32),
         log_hex64!(0xCAFEBABEDEADC0DEu64)
     );
@@ -92,9 +105,10 @@ fn main() {
     );
 
     // --- All integer types ---
+    let i8val = -9;
     log_print!(
         LogLevel::Debug,
-        log_i8!(-8),
+        log_i8!(i8val),
         log_i16!(-16),
         log_i32!(-32),
         log_i64!(-64),
@@ -105,7 +119,12 @@ fn main() {
     );
 
     // --- Char logging ---
-    log_print!(LogLevel::Info, log_str!("Char:"), log_char!('X'), log_char!('✔'));
+    log_print!(
+        LogLevel::Info,
+        log_str!("Char:"),
+        log_char!('X'),
+        log_char!('✔')
+    );
 
     // --- Error example ---
     log_print!(
@@ -120,10 +139,7 @@ fn main() {
         log_f64!(3.1415926535)
     );
 
-    log_print!(
-        LogLevel::Fixed,
-        log_str!("Ending application...")
-    );
+    log_print!(LogLevel::Fixed, log_str!("Ending application..."));
 
     // --- Show file location ---
     {
@@ -133,13 +149,12 @@ fn main() {
         }
     }
 
-
-
     // Shut down logging
     log_deinit!();
 
     println!("Logger test complete.");
 }
+
 ```
 ## Testing
 

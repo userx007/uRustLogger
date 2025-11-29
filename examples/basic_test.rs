@@ -3,7 +3,7 @@ use logger::*;
 #[allow(clippy::approx_constant)]
 fn main() {
     
-    log_module!("TEST"); // <-- NEW: module tag used in every log line
+    log_module!("TEST");
 
     // Initialize the logger:
     // console threshold = Verbose
