@@ -63,7 +63,7 @@ impl LogLevel {
 // ---------- Thread-local module tag ----------
 thread_local! {
     /// Per-thread module tag. Each file can call `log_module!("NAME");` to set this.
-    pub static LOG_MODULE: RefCell<&'static str> = RefCell::new("");
+    pub static LOG_MODULE: RefCell<&'static str> = const { RefCell::new("") };
 }
 
 #[macro_export]
@@ -194,6 +194,7 @@ impl Logger {
             self.log_file = Some(
                 std::fs::OpenOptions::new()
                     .create(true)
+                    .truncate(true)
                     .write(true)
                     .open(&filename)
                     .unwrap(),
@@ -207,6 +208,12 @@ impl Logger {
         self.log_file = None;
         self.file_logging_enabled = false;
         self.log_file_path = None;
+    }
+}
+
+impl Default for Logger {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

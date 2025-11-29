@@ -8,11 +8,6 @@ edition = "2021"
 name = "logger"
 path = "src/lib.rs"
 
-# Build a binary as a test/demo
-[[bin]]
-name = "logger_test"
-path = "src/main.rs"
-
 [dependencies]
 chrono = "0.4"
 lazy_static = "1.4"

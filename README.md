@@ -141,6 +141,10 @@ fn main() {
     println!("Logger test complete.");
 }
 ```
+## Testing
+
+Run `cargo run --example basic_test`
+
 ## Screenshot console output
 ![Console output](./docs/ScreenshotConsole.jpg)
 
@@ -149,3 +153,4 @@ fn main() {
 
 ## Screenshot file output (plain text)
 ![Console output](./docs/ScreenshotFilePlainText.jpg)
+
