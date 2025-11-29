@@ -623,7 +623,7 @@ mod tests {
 
     //
     // -----------------------------
-    // NEW TEST: Module name appears in console log message
+    //  Module name appears in console log message
     // -----------------------------
     //
     #[test]
@@ -641,7 +641,7 @@ mod tests {
 
     //
     // -----------------------------
-    // NEW TEST: Module included in file output
+    //  Module included in file output
     // -----------------------------
     //
     #[test]
@@ -674,7 +674,7 @@ mod tests {
 
     //
     // -----------------------------
-    // NEW TEST: Default module is empty
+    //  Default module is empty
     // -----------------------------
     //
     #[test]

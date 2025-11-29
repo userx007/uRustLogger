@@ -1,6 +1,7 @@
 use logger::*;
 
 fn main() {
+    
     log_module!("MODULE"); // <-- NEW: module tag used in every log line
 
     // Initialize the logger:
