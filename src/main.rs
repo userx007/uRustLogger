@@ -1,6 +1,8 @@
 use logger::*;
 
 fn main() {
+    log_module!("MODULE"); // <-- NEW: module tag used in every log line
+
     // Initialize the logger:
     // console threshold = Verbose
     // file threshold = Verbose
@@ -14,7 +16,7 @@ fn main() {
         true,              // enable file logging
         true,              // enable colors
         true,              // include date
-        true               // use icons in file
+        false              // use icons in file
     );
 
     // --- Basic string, integer, bool ---

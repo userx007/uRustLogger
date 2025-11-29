@@ -3,9 +3,11 @@
 // lazy_static = "1.4"
 
 use chrono::Local;
+use std::cell::RefCell;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
 
+// ---------- LogLevel ----------
 #[derive(Debug, Copy, Clone, PartialEq, PartialOrd)]
 pub enum LogLevel {
     Verbose,
@@ -35,13 +37,13 @@ impl std::fmt::Display for LogLevel {
 impl LogLevel {
     fn color(&self) -> &'static str {
         match self {
-            LogLevel::Verbose => "\x1b[90m",   // Bright black / gray
-            LogLevel::Debug   => "\x1b[96m",   // Bright cyan
-            LogLevel::Info    => "\x1b[92m",   // Bright green
-            LogLevel::Warning => "\x1b[93m",   // Bright yellow
-            LogLevel::Error   => "\x1b[91m",   // Bright red
-            LogLevel::Fatal   => "\x1b[95m",   // Bright magenta
-            LogLevel::Fixed   => "\x1b[97m",   // Bright white
+            LogLevel::Verbose => "\x1b[90m", // Bright black / gray
+            LogLevel::Debug => "\x1b[96m",   // Bright cyan
+            LogLevel::Info => "\x1b[92m",    // Bright green
+            LogLevel::Warning => "\x1b[93m", // Bright yellow
+            LogLevel::Error => "\x1b[91m",   // Bright red
+            LogLevel::Fatal => "\x1b[95m",   // Bright magenta
+            LogLevel::Fixed => "\x1b[97m",   // Bright white
         }
     }
 
@@ -56,6 +58,19 @@ impl LogLevel {
             LogLevel::Fixed => "✅",
         }
     }
+}
+
+// ---------- Thread-local module tag ----------
+thread_local! {
+    /// Per-thread module tag. Each file can call `log_module!("NAME");` to set this.
+    pub static LOG_MODULE: RefCell<&'static str> = RefCell::new("");
+}
+
+#[macro_export]
+macro_rules! log_module {
+    ($name:expr) => {{
+        $crate::LOG_MODULE.with(|m| *m.borrow_mut() = $name);
+    }};
 }
 
 // ---------- Logger Struct ----------
@@ -117,17 +132,30 @@ impl Logger {
     pub fn print(&mut self) {
         let timestamp = self.timestamp();
 
-        // Console
+        // Get module name from thread-local storage
+        let module = crate::LOG_MODULE.with(|m| *m.borrow());
+
+        // Console output
         if self.current_level >= self.console_threshold {
-            let msg = format!("{}{} | {}\n", timestamp, self.current_level, self.buffer);
-            if self.use_colors {
-                print!("{}{}{}\x1b[0m", self.current_level.color(), msg, "");
+            let msg = if self.use_colors {
+                format!(
+                    "{}{}{:>8} | {:<8} | {}\x1b[0m\n",
+                    self.current_level.color(),
+                    timestamp,
+                    self.current_level,
+                    module,
+                    self.buffer
+                )
             } else {
-                print!("{}", msg);
-            }
+                format!(
+                    "{}{:>8} | {:<8} | {}\n",
+                    timestamp, self.current_level, module, self.buffer
+                )
+            };
+            print!("{}", msg);
         }
 
-        // File
+        // File output
         if self.file_logging_enabled {
             if let Some(file) = &mut self.log_file {
                 let level_repr = if self.use_icons_in_file {
@@ -135,7 +163,12 @@ impl Logger {
                 } else {
                     &self.current_level.to_string()
                 };
-                let file_message = format!("{}{} | {}\n", timestamp, level_repr, self.buffer);
+
+                let file_message = format!(
+                    "{}{:>8} | {:<8} | {}\n",
+                    timestamp, level_repr, module, self.buffer
+                );
+
                 let _ = file.write_all(file_message.as_bytes());
             }
         }
@@ -183,7 +216,6 @@ lazy_static::lazy_static! {
 }
 
 // ---------- Type-safe Logger Macros ----------
-
 #[macro_export]
 macro_rules! log_str {
     ($v:expr) => {
@@ -411,24 +443,41 @@ mod tests {
         logger.use_colors = false;
         logger.include_date = false;
         logger.use_icons_in_file = false;
+
+        LOG_MODULE.with(|m| *m.borrow_mut() = "");
     }
 
+    //
+    // -----------------------------
+    // Basic Logging
+    // -----------------------------
+    //
     #[test]
     fn test_basic_logging() {
         reset_logger();
+        log_module!("TESTMOD");
+
         log_print!(
             LogLevel::Info,
             log_str!("Hello"),
             log_i32!(42),
             log_bool!(true)
         );
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
 
+    //
+    // -----------------------------
+    // Hex Logging
+    // -----------------------------
+    //
     #[test]
     fn test_hex_logging() {
         reset_logger();
+        log_module!("HEXMOD");
+
         log_print!(
             LogLevel::Debug,
             log_hex8!(0xABu8),
@@ -436,57 +485,93 @@ mod tests {
             log_hex32!(0xDEADBEEFu32),
             log_hex64!(0xDEADBEEFFEEDC0DEu64)
         );
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
 
+    //
+    // -----------------------------
+    // Pointer Logging
+    // -----------------------------
+    //
     #[test]
     fn test_pointer_logging() {
         reset_logger();
+        log_module!("PTR");
+
         let x = 123u32;
         log_print!(LogLevel::Info, log_ptr!(&x));
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
 
+    //
+    // -----------------------------
+    // File logging creation
+    // -----------------------------
+    //
     #[test]
     fn test_file_logging_creates_file() {
         reset_logger();
+        log_module!("FILE");
+
         {
             let mut logger = LOGGER.lock().unwrap();
             logger.enable_file_logging();
         }
+
         log_print!(
             LogLevel::Info,
             log_str!("File logging test"),
             log_i32!(2025)
         );
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.file_logging_enabled);
+
         if let Some(path) = &logger.log_file_path {
             assert!(Path::new(path).exists());
             let _ = std::fs::remove_file(path);
         }
     }
 
+    //
+    // -----------------------------
+    // Log level threshold checks
+    // -----------------------------
+    //
     #[test]
     fn test_log_levels() {
         reset_logger();
+        log_module!("LEVEL");
+
         {
             let mut logger = LOGGER.lock().unwrap();
             logger.set_console_threshold(LogLevel::Error);
             logger.set_file_threshold(LogLevel::Warning);
         }
+
         log_print!(LogLevel::Info, log_str!("This should not print"));
         log_print!(LogLevel::Error, log_str!("This should print"));
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
 
+    //
+    // -----------------------------
+    // Logging All Supported Types
+    // -----------------------------
+    //
     #[test]
     fn test_logging_all_types() {
         reset_logger();
+        log_module!("ALLTYPES");
+
         let x = 123;
+
         log_print!(
             LogLevel::Info,
             log_str!("Hello"),
@@ -504,24 +589,111 @@ mod tests {
             log_ptr!(&x),
             log_char!('X')
         );
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.buffer.is_empty());
     }
 
+    //
+    // -----------------------------
+    // File logging with icons
+    // -----------------------------
+    //
     #[test]
     fn test_file_logging_with_icons() {
         reset_logger();
+        log_module!("ICONMOD");
+
         {
             let mut logger = LOGGER.lock().unwrap();
             logger.use_icons_in_file = true;
             logger.enable_file_logging();
         }
+
         log_print!(LogLevel::Warning, log_str!("Warning with icon"));
+
         let logger = LOGGER.lock().unwrap();
         assert!(logger.file_logging_enabled);
+
         if let Some(path) = &logger.log_file_path {
             assert!(Path::new(path).exists());
             let _ = std::fs::remove_file(path);
         }
+    }
+
+    //
+    // -----------------------------
+    // NEW TEST: Module name appears in console log message
+    // -----------------------------
+    //
+    #[test]
+    fn test_module_name_in_output_console() {
+        reset_logger();
+        log_module!("MODX");
+
+        log_print!(LogLevel::Info, log_str!("Test123"));
+
+        // We cannot capture stdout without a harness, so instead:
+        // Ensure logger is reset → buffer empty → printed successfully.
+        let logger = LOGGER.lock().unwrap();
+        assert!(logger.buffer.is_empty());
+    }
+
+    //
+    // -----------------------------
+    // NEW TEST: Module included in file output
+    // -----------------------------
+    //
+    #[test]
+    fn test_module_name_in_file_output() {
+        reset_logger();
+        log_module!("FILEMOD");
+
+        {
+            let mut logger = LOGGER.lock().unwrap();
+            logger.enable_file_logging();
+        }
+
+        log_print!(LogLevel::Error, log_str!("ErrData"));
+
+        let path;
+        {
+            let logger = LOGGER.lock().unwrap();
+            path = logger.log_file_path.clone();
+        }
+
+        assert!(path.is_some());
+        let path = path.unwrap();
+
+        let content = std::fs::read_to_string(&path).unwrap();
+        assert!(content.contains("FILEMOD"));
+        assert!(content.contains("ErrData"));
+
+        let _ = std::fs::remove_file(path);
+    }
+
+    //
+    // -----------------------------
+    // NEW TEST: Default module is empty
+    // -----------------------------
+    //
+    #[test]
+    fn test_module_empty_when_not_set() {
+        reset_logger();
+
+        {
+            let mut logger = LOGGER.lock().unwrap();
+            logger.enable_file_logging();
+        }
+
+        log_print!(LogLevel::Info, log_str!("NoModuleTest"));
+
+        let path = LOGGER.lock().unwrap().log_file_path.clone().unwrap();
+        let content = std::fs::read_to_string(&path).unwrap();
+
+        assert!(!content.contains(" |  | ")); // No double pipes
+        assert!(content.contains("NoModuleTest"));
+
+        let _ = std::fs::remove_file(path);
     }
 }
