@@ -1,4 +1,4 @@
-use logger::*;
+use ulogger::*;
 
 #[allow(clippy::approx_constant)]
 fn main() {

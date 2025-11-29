@@ -1,13 +1,20 @@
 [package]
-name = "logger"
+name = "ulogger"             
 version = "0.1.0"
+authors = ["userx007 <vmpxxl@gmail.com>"]
+description = "Lightweight, flexible, and feature-rich logging library for Rust, supporting console and file output with multiple log levels, colors, and macros for all common data types."
+readme = "README.md"
+repository = "https://github.com/userx007/uRustLogger"
+homepage = "https://github.com/userx007/uRustLogger"
+documentation = "https://docs.rs/ulogger"
+keywords = ["logger", "logging", "timestamp", "console", "logfile"]
+categories = ["development-tools", "command-line-utilities"]
+license = "MIT"
 edition = "2021"
-
-# Build a library
-[lib]
-name = "logger"
-path = "src/lib.rs"
 
 [dependencies]
 chrono = "0.4"
 lazy_static = "1.4"
+
+[badges]
+travis-ci = { repository = "userx007/uRustLogger" }
