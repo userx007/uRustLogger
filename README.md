@@ -1,5 +1,8 @@
 # uRustLogger
 
+[![Crates.io](https://img.shields.io/crates/v/ulogger)](https://crates.io/crates/ulogger)
+[![License](https://img.shields.io/crates/l/ulogger)](https://opensource.org/licenses/MIT)
+
 `uRustLogger` is a lightweight, flexible, and fully-featured logging library for Rust, designed for both console and file output. It supports multiple log levels, colored console output, file logging with optional icons, per-module tagging, and a rich set of macros for all common data types. The library is ideal for applications that need structured logging with minimal setup.
 
 ## Features
